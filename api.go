@@ -5,7 +5,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -15,8 +14,6 @@ import (
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/youtube/v3"
 )
 
 const missingClientSecretsMessage = `
@@ -102,55 +99,4 @@ func handleError(err error, message string) {
 	if err != nil {
 		log.Fatalf(message+": %v", err.Error())
 	}
-}
-
-//channelsListByUsername Search the channel by username
-func channelsListByUsername(service *youtube.Service, part string, forUsername string) {
-
-	call := service.Channels.List(part)
-	call = call.ForUsername(forUsername)
-	response, err := call.Do()
-	handleError(err, "")
-
-	video := service.Videos.List(part)
-
-	for _, element := range response.Items {
-		fmt.Println(fmt.Sprintf("This channel's ID is %s. Its title is '%s', "+
-			"it has %d subscribers. and %d videos",
-			element.Id,
-			element.Snippet.Title,
-			element.Statistics.SubscriberCount,
-			element.Statistics.VideoCount))
-
-		video = video.Id(element.Id)
-		responsevideo, errvideo := video.Do()
-		handleError(errvideo, "")
-
-		fmt.Println(responsevideo.Items[0])
-
-	}
-
-}
-
-func main() {
-	ctx := context.Background()
-
-	b, err := ioutil.ReadFile("client_secret.json")
-	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
-	}
-
-	// If modifying these scopes, delete your previously saved credentials
-	// at ~/.credentials/youtube-go-quickstart.json
-	config, err := google.ConfigFromJSON(b, youtube.YoutubeReadonlyScope)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
-	client := getClient(ctx, config)
-	service, err := youtube.New(client)
-
-	handleError(err, "Error creating YouTube client")
-
-	channelsListByUsername(service, "snippet,contentDetails,statistics", "Qdancedotnl")
-
 }
